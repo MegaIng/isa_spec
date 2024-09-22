@@ -32,14 +32,14 @@ Any [integer](#integer).
 ### Current address
 Denoted by `$`. Evaluates to the address the first byte of this instruction would be placed at.
 ### (Virtual) field
-Denoted by `%<field_name>` where `field_name` is the name of a [field](./intro.md#fields) or a [virtual field](./intro.md#virtual-fields).
+Denoted by `%<field_name>` where `field_name` is the name of a [field](./intro.md#fields) or a [virtual field](./intro.md#virtual-fields). The target field must exist within the current instruction declaration. Virtual fields cannot be used before they have been declared.
 ### Operations
 Operations take one or more expressions as arguments and evaluate to the result of the operation on those arguments.
 
 |Name|Operands|Syntax|Precedence|Notes|
 |-|-|-|-|-|
 |Bit extraction|`a, lo, hi`|`a[hi:lo]`| `0`|`hi` is the **inclusive** upper bound, `lo` the inclusive lower bound. (Important: `hi` is declared first, then `lo`). TODO: What if `hi < lo`.|
-|Bit indexer|`a, i`|`a[i]`| `0`||
+|Bit indexer|`a, i`|`a[i]`| `0`|TODO: What if `i < 0` or `i > 63`.|
 |Multiplication|`a, b`|`a * b`| `1`||
 |Integer division|`a, b`|`a / b`| `1`| Rounds towards `0`. TODO: What if `b = 0`, crashes currently.|
 |Modulo|`a, b`|`a % b`| `1`| TODO: What if `b = 0`, crashes currently.|
@@ -51,7 +51,7 @@ Operations take one or more expressions as arguments and evaluate to the result 
 |Bitwise and|`a, b`|`a & b`| `2`||
 |Bitwise xor|`a, b`|`a ^ b`| `2`||
 
-Precedence determines the order in which operations are evaluated. Operations with the same precedence will be evaluated left to right. Otherwise the operations with **lower** precedence are evaluated first. Parenthesis (`(`, `)`) can be used to change the order of evaluation, as the expression inside the parenthesis will be evaluated first.
+Precedence determines in which order consecutive operations are evaluated. Operations with the same precedence will be evaluated left to right. Otherwise the operations with **lower** precedence are evaluated first. Parenthesis (`(`, `)`) can be used to change the order of evaluation, as the expression inside the parenthesis will be evaluated first.
 
 ### Functions
 Functions are denoted as `<function_name>(<argument_expressions>)`. Arguments are separated by `,`. There are currently two functions:
