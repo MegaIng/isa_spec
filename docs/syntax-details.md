@@ -32,7 +32,7 @@ Any [integer](#integer).
 ### Current address
 Denoted by `$`. Evaluates to the address the first byte of this instruction would be placed at.
 ### (Virtual) field
-Denoted by `%<field_name>` where `field_name` is the name of a [field](./intro.md#fields) or a [virtual field](./intro.md#virtual-fields).
+Denoted by `%<field_name>` where `field_name` is the name of a [field](./intro.md#fields) or a [virtual field](./intro.md#virtual-fields). Evaluates to the value stored in the (virtual) field.
 ### Operations
 Operations take one or more expressions as arguments and evaluate to the result of the operation on those arguments.
 
