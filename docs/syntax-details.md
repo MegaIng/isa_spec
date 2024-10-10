@@ -23,3 +23,56 @@ Delimited with either `()`, `[]`, `{}`. Most contexts do not care about which br
 Delimited with either `()`, `[]`, `{}`. Most contexts do not care about which bracket pair is used, but they do have to match. Within it, a sequences of pairs are seperated by commas. A trailing comma is allowed. A pair consists of two values, seperated by `:`. This corresponds to JSON-style object literals.
 
 ## expression
+Used as values in [virtual fields](./intro.md#virtual-fields) and [asserts](./intro.md#asserts). 
+> **Note**: Expression evaluation is done in 64 bits. All expressions evalute to a 64 bit signed integer. Size checks and conversions are only performed once the expression is used in a [virtual field](./intro.md#virtual-fields) declaration or the [bitpattern](./intro.md#bitpatterns). 
+
+Possible expression types are:
+### Numbers
+Any [integer](#integer).
+### Current address
+Denoted by `$`. Evaluates to the address the first byte of this instruction would be placed at.
+### (Virtual) field
+Denoted by `%<field_name>` where `field_name` is the name of a [field](./intro.md#fields) or a [virtual field](./intro.md#virtual-fields). Evaluates to the value stored in the (virtual) field. The target field must exist within the current instruction declaration. Virtual fields cannot be used before they have been declared.
+### Operations
+Operations take one or more expressions as arguments and evaluate to the result of the operation on those arguments.
+
+|Name|Operands|Syntax|Precedence|Notes|
+|-|-|-|-|-|
+|Bit extraction|`a, lo, hi`|`a[hi:lo]`| `0`|`hi` is the **inclusive** upper bound, `lo` the inclusive lower bound. (Important: `hi` is declared first, then `lo`). TODO: What if `hi < lo`.|
+|Bit indexer|`a, i`|`a[i]`| `0`|TODO: What if `i < 0` or `i > 63`.|
+|Multiplication|`a, b`|`a * b`| `1`||
+|Integer division|`a, b`|`a / b`| `1`| Rounds towards `0`. TODO: What if `b = 0`, crashes currently.|
+|Modulo|`a, b`|`a % b`| `1`| TODO: What if `b = 0`, crashes currently.|
+|Addition|`a, b`|`a + b`| `2`||
+|Subtraction|`a, b`|`a - b`| `2`||
+|Left shift|`a, b`|`a << b`| `2`| TODO: What if `b < 0` or `b > 63`|
+|Right shift|`a, b`|`a >> b`| `2`|Logical right shift. For arithmetic right shift, see [functions](#functions). TODO: What if `b < 0` or `b > 63`|
+|Bitwise or|`a, b`|`a \| b`| `2`||
+|Bitwise and|`a, b`|`a & b`| `2`||
+|Bitwise xor|`a, b`|`a ^ b`| `2`||
+
+Precedence determines in which order consecutive operations are evaluated. Operations with the same precedence will be evaluated left to right. Otherwise the operations with **lower** precedence are evaluated first. Parenthesis (`(`, `)`) can be used to change the order of evaluation, as the expression inside the parenthesis will be evaluated first.
+
+### Functions
+Functions are denoted as `<function_name>(<argument_expressions>)`. Arguments are separated by `,`. There are currently two functions:
+
+|Name|Operands|Notes|
+|-|-|-|
+|`log2`|`a`|Rounds down. If `a` is negative or zero, `log2(a)` is `-1`.|
+|`asr`|`a, b`|TODO: What if `b < 0` or `b > 63`?|
+
+It is **not** possible to define custom functions that can be used in expressions.
+
+### Examples:
+- `3 + 4` evaluates to `7`
+- `1 + 2 * 3` evaluates to `7`
+- `2 * (3 + 4)` evaluates to `14`
+- `%a` evaluates to whatever value the (virtual) field named `a` holds.
+- `0b11010[3:1]` evaluates to `5` (`0b101`)
+- `0b11010[4:0]` evaluates to `26` (`0b11010`)
+- `0b11010[0]` evaluates to `0`
+- `-3 / 2` evaluates to `-1`
+- `%a + %b * %c` is the same as `%a + (%b * %c)`, since `*` has a lower precedence than `+`.
+- `%a / %b * %c` is the same as `(%a / %b) * %c`, since `/` and `*` have the same precedence.
+- `log2(11)` evaluates to `3`
+- `%jmp_dest - $` could be used to calculate the offset of a relative jump. `jmp_dest` is a field that has the destination address of the jump, `$` is the address of the instruction preforming the jump.
